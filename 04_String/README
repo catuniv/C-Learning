@@ -1,0 +1,332 @@
+맞아. README 안에 코드블록을 여러 개 넣어서 복붙하기 불편하게 줬네. README 전체를 코드블록 하나로 줘야 했어.
+
+아래 하나만 통째로 복사해서 README.md에 붙여넣으면 됨.
+
+# 04_String
+C 문자열의 구조와 포인터를 이용한 문자열 처리 방법을 학습했다.
+## 학습 목표
+- C 문자열과 `'\0'`의 구조 이해
+- 포인터를 이용한 문자열 순회
+- 문자열 라이브러리 함수의 내부 동작 직접 구현
+- 문자열 수정과 `const`의 차이 이해
+- 문자열 배열과 `char **` 활용
+- 문자열 알고리즘 구현
+---
+## 1. 문자열 기본
+C 문자열은 `char` 배열이며 마지막에는 반드시 `'\0'`이 존재한다.
+```c
+char str[] = "Hello";
+```
+메모리 구조:
+```text
+'H' 'e' 'l' 'l' 'o' '\0'
+```
+포인터를 이용하면 다음과 같이 문자열을 순회할 수 있다.
+```c
+while (*str != '\0')
+{
+    str++;
+}
+```
+---
+## 2. 문자열 길이
+`strlen()`을 사용하지 않고 직접 문자열 길이를 계산했다.
+```c
+int stringLength(const char *str)
+{
+    int length = 0;
+    while (*str != '\0')
+    {
+        length++;
+        str++;
+    }
+    return length;
+}
+```
+핵심은 `'\0'`을 만날 때까지 포인터를 이동시키는 것이다.
+---
+## 3. 문자열 비교
+`strcmp()`의 동작 원리를 직접 구현했다.
+두 문자열을 앞에서부터 한 문자씩 비교하고 처음으로 다른 문자가 나오면 ASCII 값의 차이를 반환한다.
+완전히 같은 문자열이라면 두 포인터가 모두 `'\0'`에 도달한다.
+---
+## 4. 문자열 연결
+`strcat()`의 원리를 직접 구현했다.
+과정:
+1. `dest`의 `'\0'`까지 이동
+2. `src`의 문자를 하나씩 `dest` 뒤에 복사
+3. 마지막에 새로운 `'\0'` 추가
+---
+## 5. 특정 문자 개수 세기
+문자열 전체를 포인터로 순회하면서 특정 문자의 등장 횟수를 계산했다.
+```c
+int countChar(const char *str, char target)
+{
+    int count = 0;
+    while (*str != '\0')
+    {
+        if (*str == target)
+            count++;
+        str++;
+    }
+    return count;
+}
+```
+---
+## 6. 특정 문자 찾기
+`strchr()`의 원리를 직접 구현했다.
+문자를 찾으면 해당 문자의 주소를 반환하고 찾지 못하면 `NULL`을 반환한다.
+```c
+char *findChar(char *str, char target)
+{
+    while (*str != '\0')
+    {
+        if (*str == target)
+            return str;
+        str++;
+    }
+    return NULL;
+}
+```
+반환된 포인터는 해당 문자부터 문자열 끝까지를 가리킨다.
+---
+## 7. 문자열 뒤집기
+두 개의 포인터를 사용하여 문자열을 뒤집었다.
+```text
+left  → 문자열 시작
+right → 문자열 마지막 문자
+```
+`right`를 먼저 `'\0'`까지 이동시킨 후 `right--`를 수행한다.
+그 후 `left < right`인 동안 두 문자를 교환한다.
+```c
+while (left < right)
+{
+    char temp = *left;
+    *left = *right;
+    *right = temp;
+    left++;
+    right--;
+}
+```
+---
+## 8. 회문 검사
+문자열의 양쪽 끝을 비교하면서 회문인지 검사했다.
+```c
+while (left < right)
+{
+    if (*left != *right)
+        return 0;
+    left++;
+    right--;
+}
+return 1;
+```
+`1`은 회문, `0`은 회문이 아님을 의미한다.
+---
+## 9. 소문자 → 대문자 변환
+ASCII 값을 이용해 소문자를 대문자로 변환했다.
+```c
+if (*str >= 'a' && *str <= 'z')
+    *str = *str - ('a' - 'A');
+```
+포인터를 통해 원본 문자열 자체를 수정한다.
+---
+## ★★ 10. 단어 개수 세기
+가장 헷갈렸던 문제.
+단순히 공백의 개수를 세는 것이 아니라 현재 단어 내부에 있는지를 기억하는 `inWord` 상태 변수를 사용한다.
+```c
+int inWord = 0;
+```
+의미:
+```text
+inWord == 0 : 현재 단어 밖
+inWord == 1 : 현재 단어 안
+```
+핵심 로직:
+```c
+if (*str == ' ')
+{
+    inWord = 0;
+}
+else if (inWord == 0)
+{
+    count++;
+    inWord = 1;
+}
+```
+즉 새로운 단어를 발견하는 순간은 다음과 같다.
+```text
+단어 밖 → 단어 안
+```
+공백이 여러 개 연속으로 있어도 정상적으로 처리할 수 있다.
+예:
+```text
+"  I   love C  "
+```
+결과:
+```text
+3
+```
+---
+## 11. fgets()와 공백 포함 문자열 입력
+`scanf("%s")`는 공백을 만나면 입력을 종료한다.
+따라서 공백이 포함된 문자열은 `fgets()`를 사용한다.
+```c
+fgets(str, sizeof(str), stdin);
+```
+하지만 `fgets()`는 Enter로 입력한 `'\n'`까지 문자열에 저장할 수 있다.
+따라서 직접 제거했다.
+```c
+char *ptr = str;
+while (*ptr != '\n' && *ptr != '\0')
+    ptr++;
+*ptr = '\0';
+```
+`'\n'`이 존재하지 않는 경우를 대비해 반드시 `'\0'`도 검사해야 한다.
+---
+## ★ 12. char[] vs char *
+다음 두 선언은 비슷해 보이지만 의미가 다르다.
+```c
+char str1[] = "Hello";
+```
+`str1` 배열에 문자열 내용이 저장되므로 수정할 수 있다.
+```c
+str1[0] = 'Y';
+```
+결과:
+```text
+Yello
+```
+반면:
+```c
+char *str2 = "Hello";
+```
+`str2`는 문자열 리터럴 `"Hello"`를 가리킨다.
+문자열 리터럴을 수정하려고 하면 Segmentation Fault가 발생할 수 있다.
+따라서 수정하지 않을 문자열 리터럴은 다음과 같이 사용하는 것이 안전하다.
+```c
+const char *str2 = "Hello";
+```
+정리:
+```text
+char str[] = "Hello"       → 내용 수정 가능
+const char *str = "Hello"  → 내용 수정 불가
+```
+---
+## ★ 13. 문자열 배열에서 가장 긴 문자열 찾기
+문자열 배열을 사용했다.
+```c
+char *names[] = {
+    "Kim",
+    "Hong Jae Hwan",
+    "Lee",
+    "Park Min Su"
+};
+```
+함수에서는 `char **`를 통해 문자열 배열을 전달받았다.
+```c
+char *findLongestName(char **names, int size)
+```
+문자열 길이를 계산할 때 순회용 포인터를 사용했다.
+```c
+char *currentPtr = names[i];
+```
+하지만 `currentPtr++`를 반복하면 문자열 마지막까지 이동한다.
+따라서 가장 긴 문자열을 저장할 때는:
+```c
+longest = names[i];
+```
+처럼 원래 문자열의 시작 주소를 사용해야 한다.
+핵심:
+```text
+currentPtr → 순회용 포인터
+names[i]   → 문자열 시작 주소
+```
+---
+## 14. 문자열 배열 검색
+`strcmp()` 없이 문자열 배열에서 원하는 이름을 검색했다.
+```c
+while (*p1 != '\0' && *p2 != '\0')
+{
+    if (*p1 != *p2)
+        break;
+    p1++;
+    p2++;
+}
+```
+두 문자열이 완전히 같다면 두 포인터가 동시에 `'\0'`에 도달한다.
+```c
+if (*p1 == '\0' && *p2 == '\0')
+    return i;
+```
+찾지 못했다면:
+```c
+return -1;
+```
+---
+## break 정리
+`break`는 `if`문을 빠져나오는 명령어가 아니다.
+`break`는 가장 가까운 반복문 또는 `switch`를 종료한다.
+사용 가능한 구조:
+- `for`
+- `while`
+- `do-while`
+- `switch`
+예:
+```c
+while (1)
+{
+    if (condition)
+        break;
+}
+```
+여기서 `break`는 `if`가 아니라 `while`을 종료한다.
+중첩 반복문에서는 가장 가까운 반복문 하나만 종료한다.
+---
+# ★ FINAL_STRING_ANALYZER
+문자열 단원에서 학습한 내용을 하나의 프로그램으로 통합했다.
+구현 기능:
+- `fgets()`를 이용한 공백 포함 문자열 입력
+- 입력 문자열의 `'\n'` 제거
+- 문자열 길이 계산
+- 단어 개수 계산
+- 특정 문자 개수 계산
+- 회문 검사
+- 소문자 → 대문자 변환
+- 문자열 뒤집기
+사용한 함수:
+```c
+int stringLength(const char *str);
+int countWords(const char *str);
+int countChar(const char *str, char target);
+int isPalindrome(const char *str);
+void toUpperString(char *str);
+void reverseString(char *str);
+```
+문자열 라이브러리에 의존하지 않고 포인터를 중심으로 문자열 알고리즘을 직접 구현했다.
+---
+## 중요 / 어려웠던 문제
+### ★★ string_word_count.c
+- `inWord` 상태 관리
+- 단어 밖과 단어 안의 상태 구분
+- 단어 밖 → 단어 안으로 변경되는 순간에만 `count++`
+### ★ string_array_vs_pointer.c
+- `char[]`와 `char *`의 차이
+- 문자열 리터럴의 수정 위험
+- `const char *`의 필요성
+### ★ string_longest_name.c
+- 문자열 배열
+- `char **`
+- 순회용 포인터와 원본 문자열 시작 주소 구분
+### ★ FINAL_STRING_ANALYZER.c
+- 문자열 단원 전체 내용 통합
+- 여러 문자열 함수를 하나의 프로그램에서 사용
+---
+## 04_String 완료
+문자열의 기본 구조부터 포인터 기반 문자열 처리, 문자열 배열과 종합 문제까지 완료했다.
+다음 단원:
+```text
+05_Struct
+```
+
+앞으로 README 요청하면 이 형식처럼 바깥 코드블록 하나에 전부 넣어서 바로 전체 복붙 가능하게 줄게.
