@@ -1,0 +1,615 @@
+# 05_Struct - 구조체
+
+C 언어의 구조체(Struct)를 학습하고, 구조체 배열과 포인터를 활용하여 여러 데이터를 하나의 자료형으로 관리하는 방법을 연습했다.
+
+마지막에는 학생 관리 프로그램을 구현하면서 구조체, 배열, 포인터, 문자열, 함수, 검색, 정렬을 종합적으로 복습했다.
+
+---
+
+## 1. 구조체 기본
+
+서로 다른 자료형의 데이터를 하나의 자료형으로 묶을 수 있다.
+
+```c
+typedef struct
+{
+    char name[20];
+    int age;
+    double score;
+} Student;
+```
+
+구조체 변수의 멤버에는 `.` 연산자로 접근한다.
+
+```c
+Student s1;
+
+s1.age = 23;
+s1.score = 87.5;
+```
+
+---
+
+## 2. 구조체 초기화
+
+구조체를 선언하면서 바로 초기화할 수 있다.
+
+```c
+Student s1 = {"Kim", 23, 87.5};
+```
+
+초기화 값은 구조체 멤버가 선언된 순서대로 저장된다.
+
+---
+
+## 3. 구조체 포인터 ★
+
+구조체의 주소도 포인터에 저장할 수 있다.
+
+```c
+Student s1 = {"Kim", 23, 87.5};
+
+Student *ptr = &s1;
+```
+
+구조체 포인터로 멤버에 접근할 때는 `->`를 사용한다.
+
+```c
+ptr->age = 25;
+ptr->score = 95.0;
+```
+
+다음 두 표현은 같은 의미이다.
+
+```c
+(*ptr).score
+ptr->score
+```
+
+정리:
+
+```text
+Student s1     → 구조체 변수
+&s1            → 구조체의 주소
+Student *ptr   → 구조체 주소를 저장하는 포인터
+ptr->score     → ptr이 가리키는 구조체의 score
+```
+
+---
+
+## 4. 구조체를 함수에 전달
+
+구조체 자체를 함수에 전달하면 구조체가 복사된다.
+
+```c
+void changeByValue(Student s)
+{
+    s.age = 30;
+}
+```
+
+따라서 함수 안에서 값을 변경해도 원본은 변경되지 않는다.
+
+원본을 변경하려면 구조체의 주소를 전달해야 한다.
+
+```c
+void changeByPointer(Student *s)
+{
+    s->age = 30;
+    s->score = 100.0;
+}
+```
+
+정리:
+
+```text
+Student s       → 구조체 복사본
+Student *s      → 원본 구조체의 주소
+```
+
+---
+
+## 5. 구조체 배열
+
+같은 구조체 자료형 여러 개를 배열로 관리할 수 있다.
+
+```c
+Student students[] = {
+    {"Kim", 23, 87.5},
+    {"Lee", 21, 92.0},
+    {"Hong", 24, 78.5}
+};
+```
+
+일반 배열처럼 인덱스로 접근한다.
+
+```c
+students[i].name
+students[i].age
+students[i].score
+```
+
+---
+
+## 6. 구조체 배열을 함수에 전달 ★
+
+구조체 배열도 함수에 전달하면 첫 번째 구조체의 주소가 전달된다.
+
+```c
+double getAverage(Student *students, int size)
+{
+    double total = 0.0;
+
+    for (int i = 0; i < size; i++)
+    {
+        total += students[i].score;
+    }
+
+    return total / size;
+}
+```
+
+누적 변수는 반드시 초기화해야 한다.
+
+```c
+double total = 0.0;
+```
+
+초기화하지 않은 지역 변수에는 알 수 없는 값이 들어 있을 수 있다.
+
+---
+
+## 7. 구조체 주소 반환 ★
+
+배열에서 특정 구조체를 찾은 뒤 그 구조체의 주소를 반환할 수 있다.
+
+```c
+Student *findTopStudent(Student *students, int size)
+{
+    Student *top = &students[0];
+
+    for (int i = 1; i < size; i++)
+    {
+        if (students[i].score > top->score)
+        {
+            top = &students[i];
+        }
+    }
+
+    return top;
+}
+```
+
+여기서 `top`에는 학생 구조체 자체가 아니라 학생 구조체의 주소가 저장된다.
+
+```text
+students
+   ↓
+[Kim] [Lee] [Hong] [Park]
+                       ↑
+                      top
+```
+
+---
+
+## 8. 중첩 구조체
+
+구조체 내부에 다른 구조체를 멤버로 넣을 수 있다.
+
+```c
+typedef struct
+{
+    int year;
+    int month;
+    int day;
+} Date;
+
+typedef struct
+{
+    char name[20];
+    int age;
+    double score;
+    Date birth;
+} Student;
+```
+
+접근 방법:
+
+```c
+student.birth.year
+student.birth.month
+student.birth.day
+```
+
+구조체 포인터라면:
+
+```c
+ptr->birth.year
+```
+
+`Date`는 자료형이고 `birth`는 변수 이름이다.
+
+```c
+Date birth;
+```
+
+는 `int age;`와 같은 구조이다.
+
+---
+
+## 9. typedef ★
+
+`typedef`를 사용하면 구조체 자료형의 이름을 간단하게 만들 수 있다.
+
+```c
+typedef struct
+{
+    char name[20];
+    int age;
+    double score;
+} Student;
+```
+
+이제 다음처럼 사용할 수 있다.
+
+```c
+Student s1;
+Student *ptr;
+Student students[10];
+```
+
+`typedef`를 사용한다고 해서 반드시 포인터를 사용해야 하는 것은 아니다.
+
+---
+
+## 10. 구조체 배열 포인터 순회 ★
+
+구조체 배열의 시작 주소를 포인터에 저장하고 포인터를 증가시키면서 배열을 순회할 수 있다.
+
+```c
+void printStudents(const Student *students, int size)
+{
+    const Student *ptr = students;
+
+    for (int i = 0; i < size; i++)
+    {
+        printf("%s %d %.1f\n",
+               ptr->name,
+               ptr->age,
+               ptr->score);
+
+        ptr++;
+    }
+}
+```
+
+`ptr++`는 1바이트 이동하는 것이 아니다.
+
+`Student *` 포인터이므로 다음 `Student` 구조체 위치로 이동한다.
+
+```text
+ptr
+ ↓
+[Student][Student][Student]
+    ↓ ptr++
+          ↑
+```
+
+---
+
+## 11. 이름으로 구조체 검색 ★
+
+문자열을 비교하여 원하는 학생을 찾고 해당 학생의 주소를 반환했다.
+
+```c
+Student *findStudent(Student *students, int size, const char *target)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (strcmp(students[i].name, target) == 0)
+        {
+            return &students[i];
+        }
+    }
+
+    return NULL;
+}
+```
+
+사용:
+
+```c
+Student *found = findStudent(students, size, "Hong");
+
+if (found != NULL)
+{
+    printf("%s %.1f\n", found->name, found->score);
+}
+```
+
+`return &students[i]`는 이름을 반환하는 것이 아니라 해당 `Student` 구조체의 주소를 반환한다.
+
+---
+
+## 12. 검색 후 원본 수정
+
+검색 함수가 구조체의 주소를 반환하기 때문에 반환된 포인터를 이용하여 원본 데이터를 수정할 수 있다.
+
+```c
+Student *found = findStudent(students, size, "Hong");
+
+if (found != NULL)
+{
+    found->score = 95.0;
+}
+```
+
+흐름:
+
+```text
+학생 검색
+   ↓
+Student 주소 반환
+   ↓
+Student *found
+   ↓
+found->score
+   ↓
+원본 구조체 수정
+```
+
+---
+
+## 13. 구조체 배열 정렬 ★★
+
+구조체 배열도 일반 배열처럼 정렬할 수 있다.
+
+점수를 기준으로 내림차순 버블 정렬을 구현했다.
+
+```c
+void sortByScore(Student *students, int size)
+{
+    for (int i = 0; i < size - 1; i++)
+    {
+        for (int j = 0; j < size - 1 - i; j++)
+        {
+            if (students[j].score < students[j + 1].score)
+            {
+                Student temp = students[j];
+                students[j] = students[j + 1];
+                students[j + 1] = temp;
+            }
+        }
+    }
+}
+```
+
+구조체는 멤버를 하나씩 교환할 필요 없이 구조체 전체를 복사할 수 있다.
+
+```c
+Student temp = students[j];
+students[j] = students[j + 1];
+students[j + 1] = temp;
+```
+
+따라서 `name`, `age`, `score`가 모두 함께 이동한다.
+
+버블 정렬의 핵심:
+
+```text
+0 ↔ 1
+1 ↔ 2
+2 ↔ 3
+```
+
+인접한 두 원소를 계속 비교한다.
+
+내림차순:
+
+```c
+students[j].score < students[j + 1].score
+```
+
+오름차순:
+
+```c
+students[j].score > students[j + 1].score
+```
+
+---
+
+## 14. 구조체 + 이중 포인터 ★★
+
+구조체를 가리키는 포인터 자체를 함수에서 변경하려면 이중 포인터를 사용할 수 있다.
+
+```c
+void selectHigher(Student **selected, Student *a, Student *b)
+{
+    *selected = a;
+
+    if ((*selected)->score < b->score)
+    {
+        *selected = b;
+    }
+}
+```
+
+호출:
+
+```c
+Student *selected = NULL;
+
+selectHigher(&selected, &s1, &s2);
+```
+
+포인터 관계:
+
+```text
+&selected
+    ↓
+Student **
+    ↓
+*selected
+    ↓
+Student *
+    ↓
+(*selected)->score
+```
+
+중요:
+
+```c
+if (*selected < b)
+```
+
+처럼 작성하면 학생의 점수를 비교하는 것이 아니라 포인터 주소를 비교하게 된다.
+
+실제 점수를 비교하려면:
+
+```c
+if ((*selected)->score < b->score)
+```
+
+처럼 구조체의 멤버까지 접근해야 한다.
+
+---
+
+# FINAL - 학생 관리 프로그램 ★★★
+
+구조체 단원에서 배운 내용을 이용하여 학생 관리 프로그램을 구현했다.
+
+사용한 기능:
+
+- 구조체 정의
+- `typedef`
+- 구조체 배열
+- 구조체 포인터
+- 구조체 배열 함수 전달
+- 이름으로 학생 검색
+- 검색한 학생의 원본 정보 수정
+- 평균 점수 계산
+- 최고 점수 학생 검색
+- 구조체 배열 정렬
+- 문자열 비교
+- 구조체 전체 swap
+
+주요 함수:
+
+```c
+void printStudents(Student *students, int size);
+
+Student *findStudent(Student *students,
+                     int size,
+                     const char *target);
+
+Student *findTopStudent(Student *students,
+                        int size);
+
+double getAverage(Student *students,
+                  int size);
+
+void sortByScore(Student *students,
+                 int size);
+```
+
+전체적인 데이터 흐름:
+
+```text
+Student 배열
+     ↓
+함수에 주소 전달
+     ↓
+Student *
+     ↓
+검색 / 평균 / 최고점 / 정렬
+     ↓
+필요하면 원본 구조체 수정
+```
+
+---
+
+# 핵심 정리
+
+```text
+Student s
+→ 구조체 변수
+
+Student *ptr
+→ Student 구조체의 주소를 저장
+
+ptr->score
+→ ptr이 가리키는 Student의 score
+
+students[i]
+→ i번째 Student 구조체
+
+&students[i]
+→ i번째 Student의 주소
+
+Student *findStudent(...)
+→ Student의 주소를 반환하는 함수
+
+Student **selected
+→ Student를 가리키는 포인터 자체를 변경하기 위한 이중 포인터
+```
+
+구조체와 포인터를 함께 사용하면 여러 데이터를 하나의 단위로 묶어서 관리하면서도 함수에서 원본 데이터에 직접 접근하고 수정할 수 있다.
+
+---
+
+# 중요했던 문제
+
+### ★ 구조체 포인터
+
+```c
+ptr->age
+(*ptr).age
+```
+
+두 표현의 관계를 이해했다.
+
+### ★ 구조체 배열 함수 전달
+
+배열 이름이 첫 번째 구조체의 주소로 전달된다는 것을 확인했다.
+
+### ★ 구조체 주소 반환
+
+검색 결과나 최고점 학생을 구조체 자체가 아닌 `Student *`로 반환했다.
+
+### ★ 구조체 포인터 순회
+
+```c
+ptr++;
+```
+
+을 통해 다음 구조체로 이동할 수 있다는 것을 확인했다.
+
+### ★ 이름 검색
+
+`strcmp()`를 사용하여 학생을 검색하고 구조체의 주소를 반환했다.
+
+### ★★ 구조체 배열 정렬
+
+점수를 기준으로 구조체 전체를 swap하여 정렬했다.
+
+### ★★ 구조체 + 이중 포인터
+
+`Student **`를 사용하여 함수에서 `Student *`가 가리키는 대상을 변경했다.
+
+### ★★★ FINAL_STUDENT_MANAGER
+
+구조체, 배열, 포인터, 문자열, 함수, 검색, 원본 수정, 평균 계산, 최고점 탐색, 정렬을 하나의 프로그램으로 종합했다.
+
+---
+
+# 학습 완료
+
+`05_Struct` 완료.
+
+다음 학습:
+
+```text
+06_Dynamic_Memory
+```
+
+동적 메모리 할당과 `malloc`, `calloc`, `realloc`, `free`를 학습한다.
