@@ -65,7 +65,35 @@ void inorder(Node *root)
 }
 
 // L R * 1 4 16 25 20 15
-void postorder(Node *root);
+void postorder(Node *root)
+{
+	if (root == NULL) return;
+
+	stack<Node*> s1;
+	stack<Node*> s2;
+
+	s1.push(root);
+
+	while (!s1.empty())
+	{
+		Node *current = s1.top();
+		s1.pop();
+
+		s2.push(current);
+
+		if (current->left != NULL)
+			s1.push(current->left);
+
+		if (current->right != NULL)
+			s1.push(current->right);
+	}
+
+	while (!s2.empty())
+	{
+		cout << s2.top()->data << " ";
+		s2.pop();
+	}
+}
 
 int main()
 {
@@ -87,10 +115,10 @@ int main()
 	inorder(root);
 	cout << endl;
 
-/*	cout << "Postorder: " << endl;
+	cout << "Postorder: " << endl;
 	postorder(root);
 	cout << endl;
-	*/
+	
 
 	return 0;
 }
